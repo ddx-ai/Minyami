@@ -69,6 +69,17 @@ class ProxyAgentHelper {
             } catch (e) {
                 throw new InvalidProxyServerError("Proxy server invalid.");
             }
+        } else if (proxy.includes(":")) {
+            // Treat as an http proxy without protocol prefix
+            try {
+                const [_, host, port] = proxy.match(/(.+)[:：](\d+)/);
+                this.proxyAgentInstance = new HttpsProxyAgent(`http://${host}:${port}`, {
+                    keepAlive: true,
+                });
+                logger.debug(`HTTP Proxy set: http://${host}:${port}`);
+            } catch (e) {
+                throw new InvalidProxyServerError("Proxy server invalid.");
+            }
         } else {
             throw new InvalidProxyServerError("Proxy server invalid.");
         }
@@ -110,7 +121,7 @@ class ProxyAgentHelper {
     readProxyConfigurationFromEnv() {
         const proxySettings = process.env.ALL_PROXY || process.env.HTTP_PROXY || process.env.HTTPS_PROXY;
         if (proxySettings) {
-            this.setProxy(process.env.ALL_PROXY || process.env.HTTP_PROXY || process.env.HTTPS_PROXY);
+            this.setProxy(proxySettings);
         }
     }
 
